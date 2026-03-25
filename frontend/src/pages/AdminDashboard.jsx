@@ -9,7 +9,9 @@ import { Plus, X, List, Image as ImageIcon, DollarSign, User as UserIcon, Type }
 const AdminDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
-  const [formData, setFormData] = useState({ title: '', author: '', price: '', image: '', category: '', description: '' });
+  const [formData, setFormData] = useState({ title: '', author: '', price: '', category: '', description: '' });
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
   const dispatch = useDispatch();
   const { books, isLoading } = useSelector(state => state.books);
@@ -18,12 +20,54 @@ const AdminDashboard = () => {
     dispatch(fetchBooks());
   }, [dispatch]);
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + selectedFiles.length > 4) {
+      alert('Maximum 4 images allowed');
+      return;
+    }
+
+    const newFiles = [...selectedFiles, ...files];
+    setSelectedFiles(newFiles);
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews([...previews, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    const newFiles = [...selectedFiles];
+    newFiles.splice(index, 1);
+    setSelectedFiles(newFiles);
+
+    const newPreviews = [...previews];
+    URL.revokeObjectURL(newPreviews[index]);
+    newPreviews.splice(index, 1);
+    setPreviews(newPreviews);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (selectedFiles.length === 0 && !editingBook) {
+      alert('Please select at least one image');
+      return;
+    }
+
+    const data = new FormData();
+    data.append('title', formData.title);
+    data.append('author', formData.author);
+    data.append('price', formData.price);
+    data.append('category', formData.category);
+    data.append('description', formData.description);
+    
+    selectedFiles.forEach(file => {
+      data.append('images', file);
+    });
+
     if (editingBook) {
-      await dispatch(updateBook({ id: editingBook._id, bookData: formData }));
+      await dispatch(updateBook({ id: editingBook._id, bookData: data }));
     } else {
-      await dispatch(addBook(formData));
+      await dispatch(addBook(data));
     }
     closeModal();
     dispatch(fetchBooks());
@@ -36,20 +80,27 @@ const AdminDashboard = () => {
         title: book.title, 
         author: book.author, 
         price: book.price, 
-        image: book.image, 
         category: book.category || '', 
         description: book.description || '' 
       });
+      // For editing, we might want to show existing images, but for now just clear
+      setPreviews(book.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`));
+      setSelectedFiles([]); 
     } else {
       setEditingBook(null);
-      setFormData({ title: '', author: '', price: '', image: '', category: '', description: '' });
+      setFormData({ title: '', author: '', price: '', category: '', description: '' });
+      setSelectedFiles([]);
+      setPreviews([]);
     }
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormData({ title: '', author: '', price: '', image: '', category: '', description: '' });
+    setFormData({ title: '', author: '', price: '', category: '', description: '' });
+    setSelectedFiles([]);
+    previews.forEach(url => URL.revokeObjectURL(url));
+    setPreviews([]);
   };
 
   const handleDelete = (id) => {
@@ -98,7 +149,7 @@ const AdminDashboard = () => {
         {/* Modal Overlay */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="glass w-full max-w-2xl rounded-[3rem] p-10 overflow-hidden relative shadow-2xl border-white/20">
+            <div className="glass w-full max-w-2xl rounded-[3rem] p-10 overflow-y-auto max-h-[90vh] relative shadow-2xl border-white/20">
               <button onClick={closeModal} className="absolute top-8 right-8 text-slate-400 hover:text-white transition-colors">
                 <X size={24} />
               </button>
@@ -122,10 +173,32 @@ const AdminDashboard = () => {
                   <label className="text-sm font-medium text-slate-400 ml-1 flex items-center gap-1"><Plus size={14} /> Category</label>
                   <input value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all focus:ring-2 focus:ring-primary outline-none" />
                 </div>
+                
                 <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1 flex items-center gap-1"><ImageIcon size={14} /> Image URL</label>
-                  <input required value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all focus:ring-2 focus:ring-primary outline-none" />
+                  <label className="text-sm font-medium text-slate-400 ml-1 flex items-center gap-1"><ImageIcon size={14} /> Book Images (Min 1, Max 4)</label>
+                  <div className="flex flex-wrap gap-4 mb-2">
+                    {previews.map((url, index) => (
+                      <div key={index} className="relative w-24 h-32 rounded-lg overflow-hidden border border-white/10">
+                        <img src={url} alt={`preview ${index}`} className="w-full h-full object-cover" />
+                        <button 
+                          type="button" 
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    {previews.length < 4 && (
+                      <label className="w-24 h-32 flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                        <Plus size={24} className="text-slate-500" />
+                        <span className="text-[10px] text-slate-500 mt-1">Upload</span>
+                        <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
+                      </label>
+                    )}
+                  </div>
                 </div>
+
                 <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
                   <label className="text-sm font-medium text-slate-400 ml-1">Description</label>
                   <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all focus:ring-2 focus:ring-primary outline-none resize-none" />

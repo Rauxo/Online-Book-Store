@@ -23,7 +23,9 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
         <img 
-          src={book.image || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400'} 
+          src={book.images && book.images.length > 0 
+            ? (book.images[0].startsWith('http') ? book.images[0] : `http://localhost:5000${book.images[0]}`)
+            : 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400'} 
           alt={book.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />

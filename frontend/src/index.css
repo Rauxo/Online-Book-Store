@@ -39,5 +39,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

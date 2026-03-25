@@ -55,8 +55,14 @@ const Profile = () => {
                         <div className="flex flex-col gap-2">
                            {order.items.map((item, idx) => (
                              <div key={idx} className="flex items-center gap-3">
-                               <div className="w-12 h-16 bg-white/5 rounded-lg overflow-hidden shrink-0">
-                                 <img src={item.book.image} alt="" className="w-full h-full object-cover" />
+                                <div className="w-12 h-16 bg-white/5 rounded-lg overflow-hidden shrink-0">
+                                 <img 
+                                   src={item.book.images && item.book.images.length > 0
+                                     ? (item.book.images[0].startsWith('http') ? item.book.images[0] : `http://localhost:5000${item.book.images[0]}`)
+                                     : 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400'} 
+                                   alt="" 
+                                   className="w-full h-full object-cover" 
+                                 />
                                </div>
                                <div>
                                  <p className="font-bold text-white leading-tight">{item.book.title}</p>

@@ -24,9 +24,23 @@ exports.getBooks = async (req, res) => {
 // @desc    Add new book (Admin only)
 // @route   POST /api/books
 exports.addBook = async (req, res) => {
-  const { title, author, price, image, description, category } = req.body;
+  const { title, author, price, description, category } = req.body;
+  
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'At least one image is required.' });
+  }
+
+  const images = req.files.map(file => `/uploads/${file.filename}`);
+
   try {
-    const book = await Book.create({ title, author, price, image, description, category });
+    const book = await Book.create({
+      title,
+      author,
+      price,
+      images,
+      description,
+      category
+    });
     res.status(201).json(book);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -37,7 +51,14 @@ exports.addBook = async (req, res) => {
 // @route   PUT /api/books/:id
 exports.updateBook = async (req, res) => {
   try {
-    const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+    
+    // If new images are uploaded, update the images array
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map(file => `/uploads/${file.filename}`);
+    }
+
+    const book = await Book.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!book) return res.status(404).json({ message: 'Book not found' });
     res.json(book);
   } catch (error) {
