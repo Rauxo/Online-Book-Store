@@ -16,7 +16,7 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
       dispatch(removeFromFavs(book._id));
       toast.success('Removed from favourites');
     } else {
-      dispatch(addToFavs(book._id));
+      dispatch(addToFavs(book));
       toast.success('Added to favourites');
     }
   };
@@ -36,6 +36,14 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         </Link>
+        {user && (
+          <button 
+            onClick={toggleFav}
+            className={`absolute top-3 right-3 p-2 rounded-full shadow-lg backdrop-blur-md transition-all z-10 ${isFav ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/40'}`}
+          >
+            <Heart size={18} fill={isFav ? "currentColor" : "none"} />
+          </button>
+        )}
       </div>
 
       <Link to={`/book/${book._id}`} className="flex flex-col gap-1">
@@ -45,7 +53,7 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
       </Link>
 
       <div className="mt-auto flex items-center justify-between">
-        <span className="text-xl font-bold text-white">${book.price}</span>
+        <span className="text-xl font-bold text-white">₹{book.price}</span>
         {isAdmin ? (
           <div className="flex gap-2">
             <button onClick={() => onEdit(book)} className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">Edit</button>
@@ -57,15 +65,6 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
               <ShoppingBag size={18} />
               <span>View Details</span>
             </Link>
-            {user && (
-              <button 
-                onClick={toggleFav}
-                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold transition-all w-full border ${isFav ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-slate-800/50 border-white/10 text-white hover:bg-slate-700'}`}
-              >
-                <Heart size={18} fill={isFav ? "currentColor" : "none"} />
-                <span>{isFav ? 'Remove from Favourite' : 'Add to Favourite'}</span>
-              </button>
-            )}
           </div>
         )}
       </div>

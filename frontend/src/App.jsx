@@ -8,6 +8,7 @@ import Search from './pages/Search';
 import Favourites from './pages/Favourites';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
+import VerifyPayment from './pages/verify-payment';
 import AdminDashboard from './pages/AdminDashboard';
 import BookDetails from './pages/BookDetails';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,6 +34,7 @@ function App() {
               <Route path="/favourites" element={<Favourites />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/verify-payment" element={<VerifyPayment />} />
             </Route>
 
             {/* Admin Routes */}

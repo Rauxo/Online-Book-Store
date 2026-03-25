@@ -16,10 +16,10 @@ export const fetchFavourites = createAsyncThunk('favs/fetchAll', async (_, { rej
   }
 });
 
-export const addToFavs = createAsyncThunk('favs/add', async (bookId, { rejectWithValue }) => {
+export const addToFavs = createAsyncThunk('favs/add', async (book, { rejectWithValue }) => {
   try {
-    const { data } = await API.post(`/favourites/${bookId}`);
-    return data;
+    await API.post(`/favourites/${book._id}`);
+    return book;
   } catch (error) {
     return rejectWithValue(error.response.data.message);
   }
@@ -46,8 +46,7 @@ const favouriteSlice = createSlice({
         state.favourites = action.payload;
       })
       .addCase(addToFavs.fulfilled, (state, action) => {
-        // Since the backend returns the updated fav object, we just fetch again or update locally
-        // For simplicity, we'll re-fetch in the component or handle here
+        state.favourites.push(action.payload);
       })
       .addCase(removeFromFavs.fulfilled, (state, action) => {
         state.favourites = state.favourites.filter(b => b._id !== action.payload);

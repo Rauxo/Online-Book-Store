@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 
 const Checkout = () => {
   const [address, setAddress] = useState({ street: '', city: '', zipCode: '', country: '' });
+  const [phone, setPhone] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ const Checkout = () => {
     const orderData = {
       items: [{ book: '65f1234567890abcdef12345', quantity: 1 }], // Placeholder ID
       address,
-      totalPrice: 29.99
+      phone,
+      totalPrice: 2499
     };
     
     const result = await dispatch(checkout(orderData));
@@ -99,7 +101,18 @@ const Checkout = () => {
                   value={address.country}
                   onChange={(e) => setAddress({...address, country: e.target.value})}
                   className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="United States"
+                  placeholder="India"
+                  required
+                />
+              </div>
+              <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-400 ml-1">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="+91 99999 99999"
                   required
                 />
               </div>
@@ -135,7 +148,7 @@ const Checkout = () => {
             <div className="flex flex-col gap-4 border-b border-white/10 pb-6 mb-6">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Selected Book</span>
-                <span className="font-bold">$29.99</span>
+                <span className="font-bold">₹2499</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400 font-medium">Quantity: 1</span>
@@ -147,7 +160,7 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between items-center text-2xl font-bold">
               <span>Total</span>
-              <span className="gradient-text">$29.99</span>
+              <span className="gradient-text">₹2499</span>
             </div>
           </div>
         </div>

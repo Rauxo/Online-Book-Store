@@ -6,7 +6,7 @@ import API from '../services/api';
 import AnimatedWrapper from '../components/AnimatedWrapper';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BookCard from '../components/BookCard';
-import { Plus, X, List, Image as ImageIcon, DollarSign, User as UserIcon, Type, ShoppingCart, Users, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { Plus, X, List, Image as ImageIcon, IndianRupee, User as UserIcon, Type, ShoppingCart, Users, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
@@ -276,6 +276,7 @@ const AdminDashboard = () => {
                         <div>
                           <p className="text-white font-bold">Booking #{order._id.slice(-6)}</p>
                           <p className="text-slate-400 text-sm">{order.user?.name || 'Unknown User'} • {new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className="text-slate-500 text-xs mt-1">{order.phone} • {order.address.street}, {order.address.city}</p>
                         </div>
                       </div>
                       
@@ -335,7 +336,7 @@ const AdminDashboard = () => {
                   <input required value={formData.author} onChange={(e) => setFormData({...formData, author: e.target.value})} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all focus:ring-2 focus:ring-primary outline-none" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-slate-400 ml-1 flex items-center gap-1"><DollarSign size={14} /> Price</label>
+                  <label className="text-sm font-medium text-slate-400 ml-1 flex items-center gap-1"><IndianRupee size={14} /> Price</label>
                   <input required type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all focus:ring-2 focus:ring-primary outline-none" />
                 </div>
                 <div className="flex flex-col gap-2">

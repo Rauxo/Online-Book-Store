@@ -6,7 +6,8 @@ const {
   getAllOrders,
   updateOrderStatus,
   getOrderStats,
-  createCashfreeOrder
+  createCashfreeOrder,
+  verifyCashfreePayment
 } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -20,5 +21,6 @@ router.put('/:id/status', protect, adminOnly, updateOrderStatus);
 
 // Cashfree Routes
 router.post('/cashfree', protect, createCashfreeOrder);
+router.get('/verify/:orderId', protect, verifyCashfreePayment);
 
 module.exports = router;

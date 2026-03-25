@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyOrders } from '../store/orderSlice';
 import AnimatedWrapper from '../components/AnimatedWrapper';
 import LoadingSpinner from '../components/LoadingSpinner';
+import axios from "axios";
 import { User, Package, Calendar, MapPin, ExternalLink } from 'lucide-react';
 
 const Profile = () => {
@@ -52,7 +53,7 @@ const Profile = () => {
                           <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
                           <span className="font-medium text-slate-300">Order ID: #{order._id.slice(-8)}</span>
                         </div>
-                        <div className="flex flex-col gap-2">
+                         <div className="flex flex-col gap-2">
                            {order.items.map((item, idx) => (
                              <div key={idx} className="flex items-center gap-3">
                                 <div className="w-12 h-16 bg-white/5 rounded-lg overflow-hidden shrink-0">
@@ -70,13 +71,17 @@ const Profile = () => {
                                </div>
                              </div>
                            ))}
+                           <div className="mt-2 text-xs text-slate-500 flex flex-col gap-1">
+                             <p className="flex items-center gap-1"><MapPin size={12} /> {order.address.street}, {order.address.city}, {order.address.zipCode}</p>
+                             <p>Phone: {order.phone}</p>
+                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-col md:items-end justify-between border-t md:border-t-0 md:border-l border-white/5 pt-6 md:pt-0 md:pl-8">
                         <div className="flex flex-col md:items-end gap-1">
                           <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Total Amount</span>
-                          <span className="text-2xl font-bold text-white">${order.totalPrice}</span>
+                          <span className="text-2xl font-bold text-white">₹{order.totalPrice}</span>
                         </div>
                         <div className={`mt-4 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider w-fit ${order.status === 'Delivered' ? 'bg-green-500/10 text-green-500' : 'bg-primary/10 text-primary'}`}>
                           {order.status}
