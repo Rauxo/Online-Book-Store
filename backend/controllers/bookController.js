@@ -21,6 +21,21 @@ exports.getBooks = async (req, res) => {
   }
 };
 
+// @desc    Get single book by ID
+// @route   GET /api/books/:id
+exports.getBookById = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    res.json(book);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // @desc    Add new book (Admin only)
 // @route   POST /api/books
 exports.addBook = async (req, res) => {

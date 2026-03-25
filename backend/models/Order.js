@@ -13,7 +13,10 @@ const orderSchema = new mongoose.Schema({
     country: { type: String, required: true }
   },
   totalPrice: { type: Number, required: true },
-  status: { type: String, default: 'Pending' }
+  status: { type: String, default: 'Pending' },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  razorpaySignature: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

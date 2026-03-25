@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getBooks, addBook, updateBook, deleteBook } = require('../controllers/bookController');
+const { getBooks, addBook, updateBook, deleteBook  ,getBookById} = require('../controllers/bookController');
 const { protect, adminOnly } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -30,6 +30,7 @@ const upload = multer({
 });
 
 router.get('/', getBooks);
+router.get('/:id', getBookById);
 router.post('/', protect, adminOnly, upload.array('images', 4), addBook);
 router.put('/:id', protect, adminOnly, upload.array('images', 4), updateBook);
 router.delete('/:id', protect, adminOnly, deleteBook);
