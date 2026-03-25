@@ -1,0 +1,58 @@
+const Book = require('../models/Book');
+
+// @desc    Get all books or search books
+// @route   GET /api/books
+exports.getBooks = async (req, res) => {
+  try {
+    const { keyword } = req.query;
+    let query = {};
+    if (keyword) {
+      query = {
+        $or: [
+          { title: { $regex: keyword, $options: 'i' } },
+          { author: { $regex: keyword, $options: 'i' } }
+        ]
+      };
+    }
+    const books = await Book.find(query);
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Add new book (Admin only)
+// @route   POST /api/books
+exports.addBook = async (req, res) => {
+  const { title, author, price, image, description, category } = req.body;
+  try {
+    const book = await Book.create({ title, author, price, image, description, category });
+    res.status(201).json(book);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update book (Admin only)
+// @route   PUT /api/books/:id
+exports.updateBook = async (req, res) => {
+  try {
+    const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+    res.json(book);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete book (Admin only)
+// @route   DELETE /api/books/:id
+exports.deleteBook = async (req, res) => {
+  try {
+    const book = await Book.findByIdAndDelete(req.params.id);
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+    res.json({ message: 'Book removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
