@@ -11,10 +11,13 @@ import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import BookDetails from './pages/BookDetails';
 import ProtectedRoute from './components/ProtectedRoute';
+import Footer from './components/Footer';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-primary/30">
         <Navbar />
         <main className="container mx-auto px-4 py-8">

@@ -1,6 +1,58 @@
 const Order = require('../models/Order');
-const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const { Cashfree, CFEnvironment } = require('cashfree-pg');
+const axios = require('axios'); 
+
+const cashfree = new Cashfree(
+  process.env.CASHFREE_APP_ID,
+  process.env.CASHFREE_SECRET_KEY,
+  process.env.CASHFREE_ENVIRONMENT === 'PRODUCTION'
+    ? CFEnvironment.PRODUCTION
+    : CFEnvironment.SANDBOX
+);
+
+exports.createCashfreeOrder = async (req, res) => {
+  const { amount } = req.body;
+
+  try {
+    const orderData = {
+      order_id: `order_${Date.now()}`,
+      order_amount: amount,
+      order_currency: "INR",
+      customer_details: {
+        customer_id: req.user._id.toString(),
+        customer_name: req.user.name,
+        customer_email: req.user.email,
+        customer_phone: "9999999999"
+      },
+      order_meta: {
+        return_url: "http://localhost:5173/profile"
+      }
+    };
+
+    const response = await axios.post(
+      "https://sandbox.cashfree.com/pg/orders",
+      orderData,
+      {
+        headers: {
+          "x-client-id": process.env.CASHFREE_APP_ID,
+          "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+          "x-api-version": "2023-08-01",
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+    console.log("Cashfree Error:", error.response?.data || error.message);
+    res.status(500).json({
+      message: error.response?.data?.message || error.message
+    });
+  }
+};
+// console.log("SECRET:", process.env.CASHFREE_SECRET_KEY);
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -82,48 +134,35 @@ exports.getOrderStats = async (req, res) => {
   }
 };
 
-// @desc    Create Razorpay Order
-// @route   POST /api/orders/razorpay
-exports.createRazorpayOrder = async (req, res) => {
-  const { amount } = req.body;
-  try {
-    const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
+// @desc    Create Cashfree Order
+// @route   POST /api/orders/cashfree
+// exports.createCashfreeOrder = async (req, res) => {
+//   const { amount } = req.body;
 
-    const options = {
-      amount: amount * 100, // amount in smallest currency unit
-      currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-    };
+//   try {
+//     const request = {
+//       order_id: `order_${Date.now()}`,
+//       order_amount: amount,
+//       order_currency: "INR",
+//       customer_details: {
+//         customer_id: req.user._id.toString(),
+//         customer_name: req.user.name,
+//         customer_email: req.user.email,
+//         customer_phone: "9999999999",
+//       },
+//       order_meta: {
+//         return_url: "http://localhost:5173/profile",
+//       },
+//     };
 
-    const order = await instance.orders.create(options);
-    if (!order) return res.status(500).send("Some error occured");
+//     // ✅ Correct method
+//     const response = await cashfree.createOrder(request);
 
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Verify Razorpay Payment
-// @route   POST /api/orders/verify
-exports.verifyRazorpayPayment = async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-  try {
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    if (expectedSignature === razorpay_signature) {
-      res.json({ message: "Payment verified successfully", success: true });
-    } else {
-      res.status(400).json({ message: "Invalid signature", success: false });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+//     res.json(response.data);
+//   } catch (error) {
+//     console.log("Cashfree Error:", error.response?.data || error.message);
+//     res.status(500).json({
+//       message: error.response?.data?.message || error.message,
+//     });
+//   }
+// };

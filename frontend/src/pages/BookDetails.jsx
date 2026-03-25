@@ -1,94 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { load } from '@cashfreepayments/cashfree-js';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToFavs, removeFromFavs } from '../store/favouriteSlice';
+import { Heart, ShoppingBag, Loader2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const BookDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cashfree, setCashfree] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth);
+  const { favourites } = useSelector(state => state.favourites);
+  
+  const isFav = favourites.some(f => f._id === id);
+
+  useEffect(() => {
+    const initCashfree = async () => {
+      const cf = await load({ mode: "sandbox" }); // or "production"
+      setCashfree(cf);
+    };
+    initCashfree();
+  }, []);
 
   useEffect(() => {
     const fetchBookDetails = async () => {
       try {
         const { data } = await axios.get(`http://localhost:5000/api/books/${id}`);
         setBook(data);
+        console.log("data is ",data);
         setLoading(false);
       } catch (error) {
         toast.error('Failed to load book details');
+        console.log(error);
         setLoading(false);
       }
     };
     fetchBookDetails();
-  }, [id]);
+  }, [id, dispatch]);
+
+  const toggleFav = (e) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('Please login to add favourites');
+      navigate('/login');
+      return;
+    }
+    if (isFav) {
+      dispatch(removeFromFavs(id));
+      toast.success('Removed from favourites');
+    } else {
+      dispatch(addToFavs(id));
+      toast.success('Added to favourites');
+    }
+  };
 
   const handlePayment = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('Please login to book a book');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (!userInfo) {
+      toast.error('Please login to buy a book');
       navigate('/login');
       return;
     }
 
+    setIsProcessing(true);
     try {
-      // 1. Create Razorpay order on backend
-      const { data: order } = await axios.post(
-        'http://localhost:5000/api/orders/razorpay',
+      // 1. Create CashFree order on backend
+      const { data: orderData } = await axios.post(
+        'http://localhost:5000/api/orders/cashfree',
         { amount: book.price },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${userInfo.token}` } }
       );
 
-      const options = {
-        key: 'rzp_test_your_key_here', // Replace with your key
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Online Book Store',
-        description: `Booking: ${book.title}`,
-        order_id: order.id,
-        handler: async (response) => {
-          try {
-            // 2. Verify payment on backend
-            const verifyRes = await axios.post(
-              'http://localhost:5000/api/orders/verify',
-              response,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            if (verifyRes.data.success) {
-              // 3. Create actual order in DB
-              await axios.post(
-                'http://localhost:5000/api/orders',
-                {
-                  items: [{ book: id, quantity: 1 }],
-                  address: { street: 'Main St', city: 'City', zipCode: '12345', country: 'Country' }, // Default for now, should come from a form
-                  totalPrice: book.price,
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-              toast.success('Book booked successfully!');
-              navigate('/profile');
-            }
-          } catch (error) {
-            toast.error('Payment verification failed');
-          }
-        },
-        prefill: {
-          name: 'User Name',
-          email: 'user@example.com',
-        },
-        theme: {
-          color: '#3399cc',
-        },
+      // 2. Initiate checkout
+      let checkoutOptions = {
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_self", 
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      cashfree.checkout(checkoutOptions).then((result) => {
+        if (result.error) {
+          toast.error(result.error.message);
+        }
+        if (result.redirect) {
+          console.log("Redirected to payment page");
+        }
+      });
+
     } catch (error) {
-      toast.error('Error initiating payment');
+      toast.error(error.response?.data?.message || 'Error initiating payment');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -120,12 +127,23 @@ const BookDetails = () => {
             </div>
             <p className="text-slate-300 leading-relaxed mb-8">{book.description}</p>
           </div>
-          <button
-            onClick={handlePayment}
-            className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
-          >
-            Book Now / Integrate Razorpay
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handlePayment}
+              disabled={isProcessing}
+              className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+            >
+              {isProcessing ? <Loader2 className="animate-spin" /> : <ShoppingBag size={20} />}
+              <span>Buy Now (CashFree)</span>
+            </button>
+            <button
+              onClick={toggleFav}
+              className={`w-full py-4 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isFav ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-slate-800 hover:bg-slate-700 border-white/10 text-white'}`}
+            >
+              <Heart size={20} fill={isFav ? "currentColor" : "none"} />
+              <span>{isFav ? 'Remove from Favourite' : 'Add to Favourite'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

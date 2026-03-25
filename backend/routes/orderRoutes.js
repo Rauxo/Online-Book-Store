@@ -6,8 +6,7 @@ const {
   getAllOrders,
   updateOrderStatus,
   getOrderStats,
-  createRazorpayOrder,
-  verifyRazorpayPayment
+  createCashfreeOrder
 } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -19,8 +18,7 @@ router.get('/myorders', protect, getMyOrders);
 router.get('/stats', protect, adminOnly, getOrderStats);
 router.put('/:id/status', protect, adminOnly, updateOrderStatus);
 
-// Razorpay Routes
-router.post('/razorpay', protect, createRazorpayOrder);
-router.post('/verify', protect, verifyRazorpayPayment);
+// Cashfree Routes
+router.post('/cashfree', protect, createCashfreeOrder);
 
 module.exports = router;

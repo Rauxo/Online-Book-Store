@@ -1,18 +1,23 @@
-import { Heart, ShoppingBag, Trash2, ExternalLink } from 'lucide-react';
+import { ShoppingBag, Trash2, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { addToFavs, removeFromFavs } from '../store/favouriteSlice';
+import toast from 'react-hot-toast';
 
 const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
 
-  const toggleFav = () => {
+  const toggleFav = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (isFav) {
       dispatch(removeFromFavs(book._id));
+      toast.success('Removed from favourites');
     } else {
       dispatch(addToFavs(book._id));
+      toast.success('Added to favourites');
     }
   };
 
@@ -31,16 +36,6 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         </Link>
-        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {!isAdmin && user && (
-            <button 
-              onClick={toggleFav}
-              className={`p-2 rounded-full backdrop-blur-md transition-colors ${isFav ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-red-500'}`}
-            >
-              <Heart size={18} fill={isFav ? "currentColor" : "none"} />
-            </button>
-          )}
-        </div>
       </div>
 
       <Link to={`/book/${book._id}`} className="flex flex-col gap-1">
@@ -57,10 +52,21 @@ const BookCard = ({ book, isFav = false, isAdmin = false, onEdit, onDelete }) =>
             <button onClick={() => onDelete(book._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={18} /></button>
           </div>
         ) : (
-          <Link to={`/book/${book._id}`} className="flex items-center gap-2 px-4 py-2 bg-white text-slate-950 rounded-xl font-bold hover:bg-primary hover:text-white transition-all">
-            <ShoppingBag size={18} />
-            <span>View Details</span>
-          </Link>
+          <div className="flex flex-col gap-2 w-full">
+            <Link to={`/book/${book._id}`} className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-slate-950 rounded-xl font-bold hover:bg-primary hover:text-white transition-all w-full">
+              <ShoppingBag size={18} />
+              <span>View Details</span>
+            </Link>
+            {user && (
+              <button 
+                onClick={toggleFav}
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold transition-all w-full border ${isFav ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-slate-800/50 border-white/10 text-white hover:bg-slate-700'}`}
+              >
+                <Heart size={18} fill={isFav ? "currentColor" : "none"} />
+                <span>{isFav ? 'Remove from Favourite' : 'Add to Favourite'}</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
     </motion.div>

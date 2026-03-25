@@ -110,9 +110,13 @@ const AdminDashboard = () => {
     selectedFiles.forEach(file => data.append('images', file));
 
     if (editingBook) {
-      await dispatch(updateBook({ id: editingBook._id, bookData: data }));
+      const res = await dispatch(updateBook({ id: editingBook._id, bookData: data }));
+      if (!res.error) toast.success('Book updated successfully!');
+      else toast.error(res.payload || 'Failed to update book');
     } else {
-      await dispatch(addBook(data));
+      const res = await dispatch(addBook(data));
+      if (!res.error) toast.success('Book added to collection!');
+      else toast.error(res.payload || 'Failed to add book');
     }
     closeModal();
     dispatch(fetchBooks());
@@ -147,9 +151,11 @@ const AdminDashboard = () => {
     setPreviews([]);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this book?')) {
-      dispatch(deleteBook(id));
+      const res = await dispatch(deleteBook(id));
+      if (!res.error) toast.success('Book deleted successfully');
+      else toast.error(res.payload || 'Failed to delete book');
     }
   };
 

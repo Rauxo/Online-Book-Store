@@ -4,6 +4,7 @@ import { login, clearError } from '../store/authSlice';
 import { useNavigate, Link } from 'react-router-dom';
 import AnimatedWrapper from '../components/AnimatedWrapper';
 import { Mail, Lock, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,9 +14,16 @@ const Login = () => {
   const { user, isLoading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (user) navigate('/');
+    if (user) {
+      toast.success('Welcome back!');
+      navigate('/');
+    }
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
+    }
     return () => dispatch(clearError());
-  }, [user, navigate, dispatch]);
+  }, [user, error, navigate, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

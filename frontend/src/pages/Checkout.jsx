@@ -4,6 +4,8 @@ import { checkout } from '../store/orderSlice';
 import { useNavigate } from 'react-router-dom';
 import AnimatedWrapper from '../components/AnimatedWrapper';
 import { MapPin, CreditCard, ShoppingCart, Loader2, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const Checkout = () => {
   const [address, setAddress] = useState({ street: '', city: '', zipCode: '', country: '' });
@@ -26,8 +28,11 @@ const Checkout = () => {
     
     const result = await dispatch(checkout(orderData));
     if (!result.error) {
+      toast.success('Order placed successfully!');
       setIsSuccess(true);
       setTimeout(() => navigate('/profile'), 3000);
+    } else {
+      toast.error(result.payload || 'Failed to place order');
     }
   };
 

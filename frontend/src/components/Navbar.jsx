@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { Book, Heart, User, LogOut, LayoutDashboard, Search as SearchIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const Navbar = () => {
   const { user } = useSelector((state) => state.auth);
@@ -12,6 +13,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.success('Logged out successfully');
     navigate('/login');
   };
 

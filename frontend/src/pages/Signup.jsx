@@ -4,6 +4,7 @@ import { signup, clearError } from '../store/authSlice';
 import { useNavigate, Link } from 'react-router-dom';
 import AnimatedWrapper from '../components/AnimatedWrapper';
 import { User, Mail, Lock, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -14,9 +15,16 @@ const Signup = () => {
   const { user, isLoading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (user) navigate('/');
+    if (user) {
+      toast.success('Account created successfully!');
+      navigate('/');
+    }
+    if (error) {
+      toast.error(error);
+      dispatch(clearError());
+    }
     return () => dispatch(clearError());
-  }, [user, navigate, dispatch]);
+  }, [user, error, navigate, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
